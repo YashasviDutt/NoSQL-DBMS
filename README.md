@@ -2,6 +2,8 @@
 
 A lightweight, menu-driven NoSQL database written in plain Java. It stores schema-flexible key/value records in a flat file and supports CRUD, exact search, average-age aggregates, and a custom **Lucene-inspired** query engine (inverted indexes, fielded queries, boolean operators, wildcards, and scored results).
 
+**Live demo: https://nosql-dbms.onrender.com** (free tier, so the first load after idle can take about a minute)
+
 > No external dependencies. Apache Lucene is **not** used; the search engine is implemented from scratch and only borrows Lucene's ideas.
 
 ## Table of Contents
