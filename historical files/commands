@@ -1,0 +1,45 @@
+search:
+
+search "main Key : HARVIJAY"
+
+search where {"sub-Key: age, value: 20"}
+
+search where {"sub-Key : age , value : 22"},{"sub-Key : batch , value : b2"}
+
+search where {"sub-Key : batch, value : b3"} list mainKey
+
+search where {"sub-Key : add, value : New York"} list mainKey
+
+
+average age main Key:
+
+average age main Key: anjali, nikhil, sparsh
+
+average age group by batch
+
+average batch age "b2"
+
+average batch age "b3"
+
+
+Create "main key : temp_student"
+
+insert into "main key : temp_student" values {"sub-Key : age, value : 25"}, {"sub-Key : add, value : dehradun"}, {"sub-Key : batch, value : b1"}
+
+search "main Key : temp_student"
+
+update "main Key: temp_student" values {"sub-Key : age, value : 26"}, {"sub-Key : add, value : kandoli"}
+
+search where {"sub-Key : age, value : 26"},{"sub-Key : batch, value : b1"}
+
+update main key : "temp_student" to "temp_student_updated"
+
+search "main Key : temp_student_updated"
+
+delete from "main Key: temp_student_updated" {sub-Key : add}
+
+search "main Key : temp_student_updated"
+
+delete "main Key: temp_student_updated"
+
+search "main Key : temp_student_updated"

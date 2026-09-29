@@ -1,0 +1,67 @@
+search:
+
+search "main Key : HARVIJAY"
+
+search where {"sub-Key: age, value: 20"}
+
+search where {"sub-Key : age , value : 22"},{"sub-Key : batch , value : b2"}
+
+search where {"sub-Key : batch, value : b3"} list mainKey
+
+search where {"sub-Key : add, value : New York"} list mainKey
+
+search query "mainKey:HARVIJAY"
+
+search query "age:20"
+
+search query "age:22 AND batch:b2"
+
+search query "batch:b2 AND NOT age:212" list mainKey
+
+search query "add:\"New York\"" list mainKey
+
+search query "dehradun OR mussoorie"
+
+
+average age main Key:
+
+average age main Key: anjali, nikhil, sparsh
+
+average age group by batch
+
+average batch age "b2"
+
+average batch age "b3"
+
+
+Create "main key : lucene_temp_student"
+
+insert into "main key : lucene_temp_student" values {"sub-Key : age, value : 25"}, {"sub-Key : add, value : dehradun"}, {"sub-Key : batch, value : b1"}
+
+search "main Key : lucene_temp_student"
+
+search query "mainKey:lucene_temp_student"
+
+update "main Key: lucene_temp_student" values {"sub-Key : age, value : 26"}, {"sub-Key : add, value : kandoli"}
+
+search where {"sub-Key : age, value : 26"},{"sub-Key : batch, value : b1"}
+
+search query "age:26 AND add:kandoli"
+
+update main key : "lucene_temp_student" to "lucene_temp_student_updated"
+
+search "main Key : lucene_temp_student_updated"
+
+search query "mainKey:lucene_temp_student_updated"
+
+delete from "main Key: lucene_temp_student_updated" {sub-Key : add}
+
+search "main Key : lucene_temp_student_updated"
+
+search query "add:kandoli"
+
+delete "main Key: lucene_temp_student_updated"
+
+search "main Key : lucene_temp_student_updated"
+
+search query "mainKey:lucene_temp_student_updated"

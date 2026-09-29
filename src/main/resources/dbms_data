@@ -1,0 +1,58 @@
+main Key: ankit
+    sub-Key: add, Value: New York"
+    sub-Key: batch, Value: b1"
+    sub-Key: age, Value: 24"
+main Key: HARVIJAY
+    sub-Key: add, Value: New York"
+    sub-Key: batch, Value: b1"
+    sub-Key: age, Value: 29"
+main Key: anjali
+    sub-Key: add, Value: saharanpur"
+    sub-Key: batch, Value: b1"
+    sub-Key: age, Value: 19"
+main Key: megha
+    sub-Key: batch, Value: b3"
+main Key: sneha
+    sub-Key: add, Value: rishikesh"
+    sub-Key: batch, Value: b2"
+    sub-Key: age, Value: 19"
+main Key: temp_student
+    sub-Key: add, Value: dehradun"
+    sub-Key: batch, Value: b1"
+    sub-Key: age, Value: 25"
+main Key: ishika
+    sub-Key: add, Value: dehradun"
+    sub-Key: batch, Value: b2"
+    sub-Key: age, Value: 21"
+main Key: nikhil
+    sub-Key: add, Value: mussoorie"
+    sub-Key: batch, Value: b3"
+    sub-Key: age, Value: 20"
+main Key: sparsh
+    sub-Key: add, Value: ponda"
+    sub-Key: batch, Value: b2"
+    sub-Key: age, Value: 20"
+main Key: PIYUSH
+    sub-Key: add, Value: New York"
+    sub-Key: batch, Value: b2"
+    sub-Key: age, Value: 212
+main Key: x
+    sub-Key: add, Value: bidholi"
+    sub-Key: batch, Value: b2"
+    sub-Key: age, Value: 23"
+main Key: x4
+    sub-Key: add, Value: premnagar"
+    sub-Key: batch, Value: b2"
+    sub-Key: age, Value: 22"
+main Key: ayush
+    sub-Key: add, Value: roorkee"
+    sub-Key: batch, Value: b3"
+    sub-Key: age, Value: 23"
+main Key: arjun
+    sub-Key: add, Value: dehradun"
+    sub-Key: batch, Value: b2"
+    sub-Key: age, Value: 22"
+main Key: ram
+    sub-Key: add, Value: bidholi"
+    sub-Key: batch, Value: b2"
+    sub-Key: age, Value: 24"
