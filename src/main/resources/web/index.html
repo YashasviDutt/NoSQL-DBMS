@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoSQL DBMS</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1c2330; --muted: #5f6b7a;
+    --border: #d9dee5; --accent: #2457c5; --accent-text: #ffffff;
+    --out-bg: #0f1720; --out-text: #d6e2f0; --chip: #eaeff7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161c; --panel: #1a2029; --text: #e6ebf2; --muted: #93a0b2;
+      --border: #2b3441; --accent: #5b8def; --accent-text: #0b1220;
+      --out-bg: #0b0f14; --out-text: #d6e2f0; --chip: #232c3a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  p.sub { margin: 0 0 20px; color: var(--muted); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  input[type=text] { flex: 1 1 260px; min-width: 0; padding: 10px 12px; border: 1px solid var(--border);
+         border-radius: 8px; background: var(--bg); color: var(--text);
+         font: 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  button { padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel);
+           color: var(--text); font: inherit; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  button:disabled { opacity: .6; cursor: default; }
+  h2 { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { padding: 5px 10px; font: 12.5px ui-monospace, Menlo, Consolas, monospace; background: var(--chip);
+          border-radius: 999px; border: 1px solid var(--border); }
+  #log { background: var(--out-bg); color: var(--out-text); border-radius: 8px; padding: 12px;
+         height: 380px; overflow: auto; font: 13px/1.5 ui-monospace, Menlo, Consolas, monospace;
+         white-space: pre-wrap; word-break: break-word; }
+  #log .cmd { color: #7fb0ff; }
+  #log .err { color: #ff8f8f; }
+  .note { color: var(--muted); font-size: .85rem; margin-top: 8px; }
+  code { font-family: ui-monospace, Menlo, Consolas, monospace; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>NoSQL DBMS</h1>
+  <p class="sub">A schema-flexible key/value database with a Lucene-inspired query engine. Type a command below or click an example.</p>
+
+  <div class="panel">
+    <form id="form" class="row" autocomplete="off">
+      <input type="text" id="q" placeholder='e.g. search query "age:22 AND batch:b2"' aria-label="DBMS command" autofocus>
+      <button class="primary" id="run" type="submit">Run</button>
+      <button type="button" id="clear">Clear</button>
+      <button type="button" id="reset">Reset data</button>
+    </form>
+    <p class="note">Press <code>&uarr;</code> for previous commands. This demo is shared: everyone sees the same data, so use <b>Reset data</b> to restore the sample dataset.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Examples</h2>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Output</h2>
+    <div id="log" role="log" aria-live="polite"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var EXAMPLES = [
+    'search:',
+    'search "main Key : HARVIJAY"',
+    'search where {"sub-Key: age, value: 20"}',
+    'search query "age:22 AND batch:b2"',
+    'search query "batch:b2 AND NOT age:212" list mainKey',
+    'search query "add:\\"New York\\"" list mainKey',
+    'search query "dehradun OR mussoorie"',
+    'average age main Key:',
+    'average age group by batch',
+    'average batch age "b2"',
+    'Create "main key : demo_student"',
+    'insert into "main key : demo_student" values {"sub-Key : age, value : 25"}, {"sub-Key : batch, value : b1"}',
+    'update "main Key: demo_student" values {"sub-Key : age, value : 26"}',
+    'update main key : "demo_student" to "demo_student_2"',
+    'delete from "main Key: demo_student_2" {sub-Key : batch}',
+    'delete "main Key: demo_student_2"'
+  ];
+
+  var form = document.getElementById('form');
+  var input = document.getElementById('q');
+  var log = document.getElementById('log');
+  var runBtn = document.getElementById('run');
+  var history = [], pos = 0;
+
+  function append(text, cls) {
+    var span = document.createElement('span');
+    if (cls) span.className = cls;
+    span.textContent = text + '\n';
+    log.appendChild(span);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function post(url, body) {
+    runBtn.disabled = true;
+    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: body })
+      .then(function (r) { return r.text().then(function (t) { return { ok: r.ok, text: t }; }); })
+      .catch(function () { return { ok: false, text: 'Could not reach the server. It may be waking up; try again in a few seconds.' }; })
+      .then(function (res) { runBtn.disabled = false; return res; });
+  }
+
+  function run(cmd) {
+    cmd = cmd.trim();
+    if (!cmd) return;
+    history.push(cmd); pos = history.length;
+    append('> ' + cmd, 'cmd');
+    post('/api/query', cmd).then(function (res) {
+      append(res.text, res.ok ? '' : 'err');
+      append('');
+    });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    run(input.value);
+    input.value = '';
+  });
+
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowUp' && history.length) {
+      pos = Math.max(0, pos - 1); input.value = history[pos]; e.preventDefault();
+    } else if (e.key === 'ArrowDown' && history.length) {
+      pos = Math.min(history.length, pos + 1); input.value = history[pos] || ''; e.preventDefault();
+    }
+  });
+
+  document.getElementById('clear').addEventListener('click', function () { log.textContent = ''; });
+
+  document.getElementById('reset').addEventListener('click', function () {
+    post('/api/reset', '').then(function (res) { append(res.text, res.ok ? '' : 'err'); append(''); });
+  });
+
+  var chips = document.getElementById('chips');
+  EXAMPLES.forEach(function (ex) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = ex;
+    b.addEventListener('click', function () { input.value = ex; input.focus(); });
+    chips.appendChild(b);
+  });
+
+  append('Welcome. Try: search query "age:22 AND batch:b2"');
+})();
+</script>
+</body>
+</html>

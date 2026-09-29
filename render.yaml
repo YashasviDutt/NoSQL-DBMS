@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: nosql-dbms
+    runtime: docker
+    plan: free
+    healthCheckPath: /health

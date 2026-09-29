@@ -9,6 +9,7 @@ A lightweight, menu-driven NoSQL database written in plain Java. It stores schem
 - [Features](#features)
 - [Requirements](#requirements)
 - [Quick Start](#quick-start)
+- [Web Version and Deployment](#web-version-and-deployment)
 - [Project Structure](#project-structure)
 - [Data Model](#data-model)
 - [Command Reference](#command-reference)
@@ -79,16 +80,55 @@ Main Key: arjun (score: 10)
 Main Key: x4 (score: 10)
 ```
 
+## Web Version and Deployment
+
+The project also ships with a small web front end (`WebServer.java`, built on the JDK's built-in HTTP server, so no extra dependencies).
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /` | Web UI with a command box, clickable examples, and output panel |
+| `POST /api/query` | Body is one DBMS command; the response is its output |
+| `POST /api/reset` | Restores the original sample dataset |
+| `GET /health` | Health check |
+
+Run it locally (after `mvn -DskipTests package`):
+
+```bash
+java -cp target/no-sql-dbms-minor-java-1.0-SNAPSHOT.jar WebServer
+# open http://localhost:8080  (set PORT to change it)
+```
+
+Or with Docker:
+
+```bash
+docker build -t nosql-dbms .
+docker run -p 8080:8080 nosql-dbms
+```
+
+### Deploy on Render
+
+1. Push this repo to GitHub.
+2. In Render, choose **New +** > **Blueprint** and select the repo. Render reads `render.yaml` and builds the `Dockerfile`.
+   (Or create a **Web Service**, pick **Docker** as the runtime, and set the health check path to `/health`.)
+3. Once deployed, open the `*.onrender.com` URL.
+
+On the free plan the service sleeps after inactivity (the first request can take about a minute), and the filesystem is reset on every restart, so data returns to the sample dataset. Everyone shares one dataset; use **Reset data** to restore it.
+
 ## Project Structure
 
 ```text
 .
 ├── pom.xml
+├── Dockerfile                    # container build for deployment
+├── render.yaml                   # Render blueprint
 ├── src/main/
-│   ├── java/dbms.java            # entire application
+│   ├── java/
+│   │   ├── dbms.java             # DBMS + console menu
+│   │   └── WebServer.java        # HTTP API + web UI server
 │   └── resources/
 │       ├── dbms_data             # the database (flat file)
-│       └── commands              # sample commands to try
+│       ├── commands              # sample commands to try
+│       └── web/index.html        # web UI
 └── historical files/             # earlier versions kept for reference
 ```
 
@@ -233,4 +273,5 @@ This is a minor/educational project that favors clarity over production performa
 - Every write rewrites the whole `dbms_data` file and rebuilds the full search index. A production system would use incremental persistence and index updates.
 - Single-user and single-process: no concurrency control, transactions, or crash recovery.
 - The whole dataset and all indexes live in memory.
-- The entire application is in one source file.
+- The DBMS itself lives in one source file (`dbms.java`).
+- The web demo has no authentication and a single shared dataset.
