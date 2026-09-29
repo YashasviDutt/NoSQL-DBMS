@@ -90,8 +90,10 @@ The project also ships with a small web front end (`WebServer.java`, built on th
 |---|---|
 | `GET /` | Web UI with a command box, clickable examples, and output panel |
 | `POST /api/query` | Body is one DBMS command; the response is its output |
-| `POST /api/reset` | Restores the original sample dataset |
+| `POST /api/reset` | Restores your copy of the dataset to the original sample data |
 | `GET /health` | Health check |
+
+**Per-visitor data:** each visitor gets a private copy of the dataset, tracked by a random `sid` cookie. Changes never affect other visitors. A visitor's data is deleted after 30 minutes of inactivity, and the server keeps at most 200 active sessions (the least recently used is dropped first). Clearing cookies or switching browsers starts a fresh copy.
 
 Run it locally (after `mvn -DskipTests package`):
 
@@ -114,7 +116,7 @@ docker run -p 8080:8080 nosql-dbms
    (Or create a **Web Service**, pick **Docker** as the runtime, and set the health check path to `/health`.)
 3. Once deployed, open the `*.onrender.com` URL.
 
-On the free plan the service sleeps after inactivity (the first request can take about a minute), and the filesystem is reset on every restart, so data returns to the sample dataset. Everyone shares one dataset; use **Reset data** to restore it.
+On the free plan the service sleeps after inactivity (the first request can take about a minute), and all data is lost on restart, so every visitor starts again from the sample dataset.
 
 ## Project Structure
 
@@ -276,4 +278,5 @@ This is a minor/educational project that favors clarity over production performa
 - Single-user and single-process: no concurrency control, transactions, or crash recovery.
 - The whole dataset and all indexes live in memory.
 - The DBMS itself lives in one source file (`dbms.java`).
-- The web demo has no authentication and a single shared dataset.
+- The web demo has no authentication; visitors are identified only by a cookie, and their data is temporary.
+- Web commands run one at a time (console output is captured process-wide), which is fine for a demo but limits throughput.

@@ -443,7 +443,15 @@ class Mapping_task {
     private HashMap<String, HashMap<String, String>> Main_mapping = new HashMap<>();
     private LuceneLikeQueryEngine queryEngine = new LuceneLikeQueryEngine();
 
+    private final File dataFile;
+
     Mapping_task() {
+        this(DbmsFiles.resolve(FILE_NAME));
+    }
+
+    // Lets a caller (e.g. the web server) give each user their own data file.
+    Mapping_task(File dataFile) {
+        this.dataFile = dataFile;
         // Load data from the file into Main_mapping
         loadExistingData();
         rebuildSearchIndex();
@@ -454,7 +462,6 @@ class Mapping_task {
     }
 
     void loadExistingData() {
-        File dataFile = DbmsFiles.resolve(FILE_NAME);
         try (BufferedReader reader = new BufferedReader(new FileReader(dataFile))) {
             String line;
             String currentMainKey = null;
@@ -982,7 +989,6 @@ class Mapping_task {
     }
 
     void writeDataToFile() {
-        File dataFile = DbmsFiles.resolve(FILE_NAME);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(dataFile, false))) {
             for (Map.Entry<String, HashMap<String, String>> entry : Main_mapping.entrySet()) {
                 String mainKey = entry.getKey();
