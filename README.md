@@ -1,31 +1,111 @@
-# custom NoSQL DBMS 
+# NoSQL DBMS (Java)
 
-A lightweight Java-based NoSQL DBMS simulation for schema-flexible key/value records. The project supports CRUD operations, exact search, aggregate age queries, and a custom Lucene-inspired query engine for indexed retrieval over dynamic NoSQL-style data.
+A lightweight, menu-driven NoSQL database written in plain Java. It stores schema-flexible key/value records in a flat file and supports CRUD, exact search, average-age aggregates, and a custom **Lucene-inspired** query engine (inverted indexes, fielded queries, boolean operators, wildcards, and scored results).
 
-This project does not depend on Apache Lucene. It implements a small custom search engine inspired by Lucene concepts such as inverted indexes, tokenization, fielded queries, boolean operators, and scored result ordering.
+> No external dependencies. Apache Lucene is **not** used; the search engine is implemented from scratch and only borrows Lucene's ideas.
+
+## Table of Contents
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [Quick Start](#quick-start)
+- [Project Structure](#project-structure)
+- [Data Model](#data-model)
+- [Command Reference](#command-reference)
+  - [CRUD](#crud-commands)
+  - [Exact Search](#exact-search)
+  - [Lucene-Inspired Query Engine](#lucene-inspired-query-engine)
+  - [Aggregate Queries](#aggregate-queries)
+- [Try It: Command File](#try-it-command-file)
+- [Complexity Analysis](#complexity-analysis)
+- [Limitations](#limitations)
+
+## Features
+
+- **Schema-flexible records**: each main key can have its own set of sub-keys.
+- **SQL-like CRUD commands**: create, insert, update, rename, and delete.
+- **Exact search**: by main key, by one or more sub-key/value conditions, or list only main keys.
+- **Indexed search**: `search query` supports fielded terms, free text, `AND` / `OR` / `NOT`, parentheses, quoted phrases, `*` wildcards, and ranked scores.
+- **Aggregates**: average age overall, for selected keys, grouped by batch, or for a single batch.
+- **Automatic re-indexing** after every create, update, rename, or delete.
+- **Persistent**: every change is written back to a flat file.
+
+## Requirements
+
+- Java 8 or newer (JDK)
+- Maven 3.x
+
+## Quick Start
+
+```bash
+git clone https://github.com/YashasviDutt/NoSQL-DBMS.git
+cd NoSQL-DBMS
+
+# build
+mvn -DskipTests package
+
+# run
+java -jar target/no-sql-dbms-minor-java-1.0-SNAPSHOT.jar
+```
+
+You can also run it without building a jar:
+
+```bash
+mvn compile exec:java
+```
+
+Run from the project root. The app locates `pom.xml` and reads/writes `src/main/resources/dbms_data`.
+
+> **Heads up:** create/update/delete commands modify `dbms_data` in place. Use `git checkout src/main/resources/dbms_data` to restore the original dataset.
+
+### Menu
+
+```text
+Press 1 for data reading
+Press 2 for dbms tasks
+Press 3 for exit
+```
+
+Choose `2` to enter commands, then type `quit` to return to the menu.
+
+### Sample Session
+
+```text
+Enter SQL-like query or type 'quit' to exit:
+search query "age:22 AND batch:b2"
+
+Lucene-style query: age:22 AND batch:b2
+Main Key: arjun (score: 10)
+Main Key: x4 (score: 10)
+```
 
 ## Project Structure
 
 ```text
-pom.xml
-src/main/java/dbms.java
-src/main/resources/dbms_data
-src/main/resources/commands
+.
+├── pom.xml
+├── src/main/
+│   ├── java/dbms.java            # entire application
+│   └── resources/
+│       ├── dbms_data             # the database (flat file)
+│       └── commands              # sample commands to try
+└── historical files/             # earlier versions kept for reference
 ```
 
-`src/main/java/dbms.java` contains the full application:
+`src/main/java/dbms.java` contains:
 
-- `DbmsFiles`: resolves project resource paths.
-- `Data_read`: reads and prints the dataset file.
-- `Mapping_task`: stores data in memory, processes commands, persists updates.
-- `LuceneLikeQueryEngine`: builds inverted indexes and runs Lucene-style queries.
-- `dbms`: menu-driven program entry point.
+| Class | Responsibility |
+|---|---|
+| `DbmsFiles` | Locates the project root and resource files. |
+| `Data_read` | Reads and prints the dataset file. |
+| `Mapping_task` | Holds data in memory, parses commands, persists changes. |
+| `LuceneLikeQueryEngine` | Builds inverted indexes and evaluates indexed queries. |
+| `SearchResult` | A matched main key plus its score. |
+| `dbms` | Menu-driven entry point. |
 
 ## Data Model
 
-The database is stored in `src/main/resources/dbms_data` as a flat file.
-
-Each record has one main key and any number of sub-key/value fields:
+Each record has one **main key** and any number of **sub-key/value** fields, stored in `dbms_data`:
 
 ```text
 main Key: HARVIJAY
@@ -34,134 +114,42 @@ main Key: HARVIJAY
     sub-Key: age, Value: 29"
 ```
 
-In memory, the data is represented as:
+In memory it is a `HashMap<String, HashMap<String, String>>`, so different main keys can have different sub-keys.
 
-```java
-HashMap<String, HashMap<String, String>>
-```
+## Command Reference
 
-This makes the data schema-flexible: different main keys can have different sub-keys.
+### CRUD Commands
 
-## Build
+| Action | Syntax |
+|---|---|
+| Create main key | `Create "main key : lucene_temp_student"` |
+| Insert sub-keys | `insert into "main key : lucene_temp_student" values {"sub-Key : age, value : 25"}, {"sub-Key : add, value : dehradun"}` |
+| Update sub-keys | `update "main Key: lucene_temp_student" values {"sub-Key : age, value : 26"}` |
+| Rename main key | `update main key : "lucene_temp_student" to "lucene_temp_student_updated"` |
+| Delete sub-key(s) | `delete from "main Key: lucene_temp_student_updated" {sub-Key : add}` |
+| Delete main key | `delete "main Key: lucene_temp_student_updated"` |
 
-```bash
-mvn -DskipTests package
-```
+Notes:
 
-## Run
+- **Create** adds a main key with no sub-keys.
+- **Insert** adds sub-keys to an existing main key.
+- **Update** updates or inserts sub-keys on an existing main key.
+- **Rename** merges entries if the new main key already exists.
+- **Delete main key** removes the key and all its sub-keys.
 
-```bash
-java -jar target/no-sql-dbms-minor-java-1.0-SNAPSHOT.jar
-```
-
-The app reads and writes this exact dataset path when run from the project root:
-
-```text
-src/main/resources/dbms_data
-```
-
-## Menu
+### Exact Search
 
 ```text
-Press 1 for data reading
-Press 2 for dbms tasks
-Press 3 for exit
+search:                                                            # print all records
+search "main Key : HARVIJAY"                                       # by main key
+search where {"sub-Key: age, value: 20"}                           # by one condition
+search where {"sub-Key : age , value : 22"},{"sub-Key : batch , value : b2"}   # multiple conditions
+search where {"sub-Key : batch, value : b3"} list mainKey          # main keys only
 ```
 
-Choose `2` to enter SQL-like DBMS commands.
+### Lucene-Inspired Query Engine
 
-## Supported Commands
-
-### Create
-
-```text
-Create "main key : lucene_temp_student"
-```
-
-Creates a new main key with an empty sub-key map.
-
-### Insert
-
-```text
-insert into "main key : lucene_temp_student" values {"sub-Key : age, value : 25"}, {"sub-Key : add, value : dehradun"}, {"sub-Key : batch, value : b1"}
-```
-
-Adds sub-key/value pairs under an existing main key.
-
-### Update Sub-Keys
-
-```text
-update "main Key: lucene_temp_student" values {"sub-Key : age, value : 26"}, {"sub-Key : add, value : kandoli"}
-```
-
-Updates or inserts sub-key/value pairs under an existing main key.
-
-### Rename Main Key
-
-```text
-update main key : "lucene_temp_student" to "lucene_temp_student_updated"
-```
-
-Renames a main key. If the new main key already exists, entries are merged.
-
-### Delete Sub-Key
-
-```text
-delete from "main Key: lucene_temp_student_updated" {sub-Key : add}
-```
-
-Deletes one or more sub-keys from a main key.
-
-### Delete Main Key
-
-```text
-delete "main Key: lucene_temp_student_updated"
-```
-
-Deletes the entire main key and all of its sub-keys.
-
-## Exact Search
-
-### Print All Records
-
-```text
-search:
-```
-
-### Search by Main Key
-
-```text
-search "main Key : HARVIJAY"
-```
-
-### Search by Sub-Key/Value Conditions
-
-```text
-search where {"sub-Key: age, value: 20"}
-search where {"sub-Key : age , value : 22"},{"sub-Key : batch , value : b2"}
-```
-
-### List Only Main Keys
-
-```text
-search where {"sub-Key : batch, value : b3"} list mainKey
-```
-
-## Lucene-Inspired Query Engine
-
-The `search query` command uses a custom indexed retrieval engine.
-
-### Indexed Fields
-
-Every main key and sub-key/value pair is indexed:
-
-- `mainKey`
-- `age`
-- `batch`
-- `add`
-- Any other dynamic sub-key that appears in the dataset
-
-### Query Examples
+`search query "<query>"` runs against inverted indexes built from every main key and every sub-key/value pair (`mainKey`, `age`, `batch`, `add`, and any other sub-key in the data).
 
 ```text
 search query "mainKey:HARVIJAY"
@@ -172,124 +160,77 @@ search query "add:\"New York\"" list mainKey
 search query "dehradun OR mussoorie"
 ```
 
-### Supported Query Features
+| Feature | Example |
+|---|---|
+| Fielded search | `age:20`, `batch:b2`, `mainKey:HARVIJAY` |
+| Free-text search across all values | `dehradun` |
+| Boolean operators | `AND`, `OR`, `NOT` |
+| Grouping | `(age:20 OR age:22) AND batch:b2` |
+| Quoted values | `add:"New York"` |
+| Wildcards | `*` |
+| Ranked results | each result shows a `score` |
+| Compact output | append `list mainKey` |
 
-- Fielded search: `age:20`, `batch:b2`, `mainKey:HARVIJAY`
-- Free-text search across all indexed values: `dehradun`
-- Boolean operators: `AND`, `OR`, `NOT`
-- Parentheses in query parsing
-- Quoted values: `add:"New York"`
-- Wildcard matching with `*`
-- Result scores
-- `list mainKey` output mode
-- Automatic index rebuild after create, update, rename, and delete
-
-### Example Output
-
-```text
-search query "age:22 AND batch:b2"
-
-Lucene-style query: age:22 AND batch:b2
-Main Key: arjun (score: 10)
-Main Key: x4 (score: 10)
-```
-
-## Aggregate Queries
-
-### Average Age of All Records
+### Aggregate Queries
 
 ```text
-average age main Key:
+average age main Key:                              # all records
+average age main Key: anjali, nikhil, sparsh       # selected main keys
+average age group by batch                         # grouped by batch
+average batch age "b2"                             # one batch
 ```
 
-### Average Age of Selected Main Keys
+## Try It: Command File
 
-```text
-average age main Key: anjali, nikhil, sparsh
-```
-
-### Average Age Grouped by Batch
-
-```text
-average age group by batch
-```
-
-### Average Age for One Batch
-
-```text
-average batch age "b2"
-```
-
-## Command File
-
-`src/main/resources/commands` contains a verification command set covering:
-
-- Exact searches
-- Lucene-style indexed searches
-- Aggregate age queries
-- Create
-- Insert
-- Update
-- Rename
-- Delete sub-key
-- Delete main key
-- Dynamic index refresh after mutations
+`src/main/resources/commands` is a ready-made script covering exact search, indexed search, aggregates, and the full create → insert → update → rename → delete cycle (including index refresh after each change). Paste the commands into the `dbms tasks` prompt one at a time. The script cleans up after itself by deleting the temporary record it creates.
 
 ## Complexity Analysis
 
 Let:
 
-- `n` = number of main keys.
-- `m` = average number of sub-keys per main key.
-- `T` = total indexed tokens across all main keys and values.
-- `u` = number of unique indexed terms or values.
-- `q` = number of query terms/operators.
-- `p` = total postings touched by an indexed query.
-- `r` = number of results returned.
-- `c` = number of exact `search where` conditions.
+- `n` = number of main keys
+- `m` = average sub-keys per main key
+- `T` = total indexed tokens
+- `u` = unique indexed terms/values
+- `q` = query terms/operators
+- `p` = postings touched by an indexed query
+- `r` = results returned
+- `c` = number of `search where` conditions
+- `k` = sub-keys inserted/updated/deleted in one command
+- `s` = selected main keys in an aggregate
 
-### Storage Complexity
+### Storage
 
-| Component | Space Complexity | Notes |
+| Component | Space | Notes |
 |---|---:|---|
-| In-memory database map | `O(n * m)` | Stores main keys and sub-key/value pairs. |
-| Lucene-like inverted indexes | `O(T)` | Stores token-to-main-key and field/value-to-main-key mappings. |
-| File storage | `O(n * m)` | Flat-file representation in `dbms_data`. |
-| Total runtime storage | `O(n * m + T)` | Database plus search indexes. |
+| In-memory map | `O(n * m)` | Main keys and sub-key/value pairs. |
+| Inverted indexes | `O(T)` | Token/field/value to main-key mappings. |
+| File storage | `O(n * m)` | Flat file `dbms_data`. |
+| **Total runtime** | `O(n * m + T)` | Database plus indexes. |
 
-### Operation Complexity
+### Time
 
-| Operation | Time Complexity | Notes |
+| Operation | Time | Notes |
 |---|---:|---|
-| Load dataset | `O(n * m)` | Reads all records and sub-keys from the file. |
-| Build/rebuild search index | `O(T)` | Tokenizes and indexes all fields. |
-| Print all records | `O(n * m)` | Reads every in-memory record. |
-| Create main key | `O(1)` in memory, `O(n * m + T)` after persistence | Current implementation rewrites the file and rebuilds the index. |
-| Insert sub-keys | `O(k)` in memory, `O(n * m + T)` after persistence | `k` is number of inserted sub-keys. |
-| Update sub-keys | `O(k)` in memory, `O(n * m + T)` after persistence | Rewrites file and rebuilds index. |
-| Rename main key | `O(1)` average in memory, `O(n * m + T)` after persistence | HashMap remove/put plus full rewrite/reindex. |
-| Delete sub-keys | `O(k)` in memory, `O(n * m + T)` after persistence | Deletes `k` sub-keys, then rewrites/reindexes. |
-| Delete main key | `O(1)` average in memory, `O(n * m + T)` after persistence | HashMap removal plus full rewrite/reindex. |
-| Exact main-key search | `O(1 + m)` average | HashMap lookup plus printing sub-keys. |
-| `search where` exact scan | `O(n * c + r * m)` | Scans records and prints matching results. |
-| Lucene-style exact field query | `O(q + p + r log r)` typical | Uses inverted index postings, then sorts by score. |
-| Lucene-style boolean query | `O(q + p + r log r)` typical | Evaluates postings with AND/OR/NOT. |
-| Lucene-style wildcard query | `O(u + p + r log r)` | Wildcard scans indexed terms before collecting postings. |
-| Aggregate all ages | `O(n)` | Checks age field for each main key. |
-| Aggregate selected keys | `O(s)` | `s` selected main keys. |
-| Aggregate by batch | `O(n)` | Scans records and groups by batch. |
+| Load dataset | `O(n * m)` | Reads all records. |
+| Build/rebuild index | `O(T)` | Tokenizes and indexes all fields. |
+| Print all records | `O(n * m)` | |
+| Create main key | `O(1)` in memory, `O(n * m + T)` with persistence | Rewrites file, rebuilds index. |
+| Insert / update / delete sub-keys | `O(k)` in memory, `O(n * m + T)` with persistence | |
+| Rename / delete main key | `O(1)` avg in memory, `O(n * m + T)` with persistence | |
+| Exact main-key search | `O(1 + m)` avg | HashMap lookup. |
+| `search where` | `O(n * c + r * m)` | Scans all records. |
+| Indexed field / boolean query | `O(q + p + r log r)` typical | Postings lookup, then sort by score. |
+| Indexed wildcard query | `O(u + p + r log r)` | Scans indexed terms first. |
+| Average age (all) | `O(n)` | |
+| Average age (selected) | `O(s)` | |
+| Average age by batch | `O(n)` | |
 
-### Important Note
+## Limitations
 
-The current project prioritizes clarity and demonstration over production-level write performance. Write operations update the in-memory map efficiently, but then the implementation rewrites the full `dbms_data` file and rebuilds the full search index. This keeps the code simple and correct for a minor project, but a production system would use incremental persistence and incremental index updates.
+This is a minor/educational project that favors clarity over production performance:
 
-## Verification
-
-The project was verified with:
-
-```bash
-mvn -q -DskipTests package
-java -jar target/no-sql-dbms-minor-java-1.0-SNAPSHOT.jar
-```
-
-The command set in `src/main/resources/commands` was run through the DBMS menu and verified for CRUD, aggregate queries, exact search, and Lucene-inspired indexed search.
+- Every write rewrites the whole `dbms_data` file and rebuilds the full search index. A production system would use incremental persistence and index updates.
+- Single-user and single-process: no concurrency control, transactions, or crash recovery.
+- The whole dataset and all indexes live in memory.
+- The entire application is in one source file.
